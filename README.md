@@ -6,8 +6,10 @@
 3. Run!
 
 ## Roadmap
-- [ ] Rooms
-- [ ] All questions
-- [ ] Nice socket UX
-- [ ] Join at anytime
+- [x] Rooms
+- [x] All questions
+- [x] Nice socket UX
+- [x] Join at anytime
+- [x] Styling
+- [ ] Nice styling
 - [ ] Custom questions + "CMS" + User management

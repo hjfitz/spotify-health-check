@@ -62,7 +62,6 @@ io.on('connection', (socket) => {
             }
             // remove that socket from participants and re-emit
             const newParticipants = room.participants.filter(user => user.socket.id !== socket.id)
-            console.log('attempting to cleanup old room', {old: room.participants, new: newParticipants})
             if (newParticipants.length !== room.participants.length) { // there are differing participants
                 delete newParticipants
                 room.participants = newParticipants
@@ -98,7 +97,6 @@ io.on('connection', (socket) => {
     
         console.log('complete, emitting to all participants')
         curRoom.participants.forEach(({socket}) => {
-            console.log(curRoom.questions)
             socket.emit('complete', curRoom.questions.map(question => ({
                 title: question.title,
                 green: question.green,
