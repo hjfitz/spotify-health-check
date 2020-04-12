@@ -52,6 +52,7 @@ io.on('connection', (socket) => {
     })
 
     socket.on('disconnect', () => {
+        console.log(socket.id, 'disconnected')
         // cleanup rooms
         Object.entries(rooms).forEach(([id, room]) => {
             if (room.owner === socket.id) {
@@ -61,9 +62,11 @@ io.on('connection', (socket) => {
             }
             // remove that socket from participants and re-emit
             const newParticipants = room.participants.filter(user => user.socket.id !== socket.id)
+            console.log('attempting to cleanup old room', {old: room.participants, new: newParticipants})
             if (newParticipants.length !== room.participants.length) { // there are differing participants
+                delete newParticipants
                 room.participants = newParticipants
-                room.participants.forEach(user => user.socket.emit('new-user', room.participants.map(user => user.name)))
+                newParticipants.forEach(user => user.socket.emit('new-user', newParticipants.map(user => user.name)))
             }
         })
     })
@@ -100,10 +103,7 @@ io.on('connection', (socket) => {
                 title: question.title,
                 green: question.green,
                 red: question.red,
-                responses: question.responses.reduce((acc, cur) => {
-                    acc[cur] += 1
-                    return acc
-                }, {'red': 0, 'yellow': 0, 'green': 0})
+                responses: calculateResponses(question.responses)
             })))
         })
     })
@@ -123,7 +123,7 @@ io.on('connection', (socket) => {
 
             // have all responses, display round responses
             const curQuestion = curRoom.questions[curRoom.questionIndex]
-            curRoom.participants.forEach(({socket}) => socket.emit('round-response', {responses, curQuestion}))
+            curRoom.participants.forEach(({socket}) => socket.emit('round-response', calculateResponses(curQuestion.responses)))
         }
 
 
@@ -131,6 +131,11 @@ io.on('connection', (socket) => {
 })
 
 const createRoomID = () => Math.random().toString(36).substring(2,6).toUpperCase()
+
+const calculateResponses = arr => arr.reduce((acc, cur) => {
+    acc[cur] += 1
+    return acc
+}, {'red': 0, 'yellow': 0, 'green': 0})
 
 function createRoom(socketID) {
     return {

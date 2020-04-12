@@ -31,6 +31,8 @@ const App = () => {
     const [room, setRoom] = useState(null)
     const [notFound, setNotFound] = useState(false)
     const roomEntry = useRef(null)
+    const [copied, setHasCopied] = useState(false)
+    const roomCodeRef = useRef(null)
     //   owner bits
     const createRoom = () => {
         socket.emit('create-room', name)
@@ -40,6 +42,14 @@ const App = () => {
             setIsOwner(true)
             route('/game')
         })
+    }
+
+    const copyRoom = async () => {
+        await navigator.clipboard.writeText(room)  
+        setHasCopied(true)
+        setTimeout(() => {
+            setHasCopied(false)
+        }, 1500)
     }
     //   participant bits
     const joinRoom = () => {
@@ -129,14 +139,16 @@ const App = () => {
 
     return (
         <main>
+            <h1>Team Health Check</h1>
             {name && <p>Welcome, {name}</p>}
-            {room && <p>You are in room {room}</p>}
+            {room && <p>You are in room <span className="room-name" onClick={copyRoom} ref={roomCodeRef}>{room}</span></p>}
+            {copied && <p className="copied-notification">Copied room to clipboard</p>}
             {notFound && <p><strong>Game not found</strong></p>}
             <Router>
                 <section path="/" className="name">
                     <label htmlFor="name-input" className="name-label">
                         Enter Name: 
-                        <input key='name' onKeyUp={keySetUsername}ref={nameEntry} type="text" className="name-input"/>
+                        <input key='name' onKeyUp={keySetUsername} ref={nameEntry} type="text" className="name-input"/>
                     </label>
                     <button onClick={setUsername}>Next</button>
                 </section>
@@ -151,23 +163,31 @@ const App = () => {
                             Join room
                         </button>
                     <section className="startroom">
-                        <p>Or, start your own room</p>
+                        <p className="txt-inline">Or, start your own room</p>
                         <button onClick={createRoom} className="startroom-start">Start Room</button>
                     </section>
                 </section>
 
 
                 <section path="/game">
-                        <p>You are {isOwner || 'not'} the room owner. Participants:</p>
-                        <div className="participants">
-                            <ul className="participant-list">
-                                {participants.map(participant => <li key={participant}>{participant}</li>)}
-                            </ul>
-                        </div>
+                        {isOwner && <p className="txt-inline">You are the room owner.</p>}
+                        {(!isReady && isOwner && !!participants.length) && <button onClick={startGame} className='isready-readier'>Ready-up</button>}
+                        {participants.length ? 
+                        (
+                            <div className="participants">
+                                <ul className="participant-list">
+                                    {participants.map(participant => <li key={participant}>{participant}</li>)}
+                                </ul>
+                            </div>
+                        ) : 
+                            <p>Nobody has joined yet</p>
+                        }
+
+                        {(!isReady && !isOwner) && (
                         <div className="isready">
-                            {!isReady && <p>Waiting for game to begin</p>}
-                            {(!isReady && isOwner) && <button onClick={startGame} className='isready-readier'>Ready-up</button>}
+                            <p>Waiting for game to begin</p>
                         </div>
+                             )}
                     <section>
                         {isReady && (
                             <div>
@@ -188,7 +208,11 @@ const App = () => {
                         {(showPrevRound && (
                             <div className="previousresponse">
                                 <h3>Previous Round</h3>
-                                {JSON.stringify(prevResponse)}
+                                <ul className="responses">
+                                    <li>Red: {prevResponse.red}</li>
+                                    <li>Yellow: {prevResponse.yellow}</li>
+                                    <li>Green: {prevResponse.green}</li>
+                                </ul>
                             </div>
                         ))}
 
@@ -200,9 +224,9 @@ const App = () => {
                        
                         {(!isOwner) && (
                             <div className="responsePanel">
-                                <button disabled={waiting} onClick={sendColour('red')}>Red</button>
-                                <button disabled={waiting} onClick={sendColour('yellow')}>Yellow</button>
-                                <button disabled={waiting} onClick={sendColour('green')}>Green</button>
+                                <button disabled={waiting} className='red' onClick={sendColour('red')}></button>
+                                <button disabled={waiting} className='yellow' onClick={sendColour('yellow')}></button>
+                                <button disabled={waiting} className='green' onClick={sendColour('green')}></button>
                             </div>
                         )}
                         </div>

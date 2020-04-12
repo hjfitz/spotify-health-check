@@ -1,0 +1,80 @@
+body {
+    font-family: sans-serif;
+    margin: 0;
+}
+
+
+#preact, main {
+    height: 100%;
+    overflow-x: hidden;
+}
+
+.room-name {
+    cursor: pointer;
+}
+
+.copied-notification {
+    font-size: 8px;
+    font-weight: 600;
+}
+
+
+main {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+
+    & > section {
+        width: 600px;
+        max-width: 1280px;
+        padding: 0 200px;
+    }
+
+    label > input {
+        margin: 0 8px;
+    }
+
+    .txt-inline {
+        display: inline;
+    }
+
+    .startroom {
+        margin: 16px 0;
+        .startroom-start {
+            margin-left: 4px;
+        }
+    }
+
+
+    .responsePanel {
+        display: flex;
+        align-items: center;
+        justify-content: space-around;
+
+        button {
+            border: 0;
+            cursor: pointer;
+            height: 64px;
+            width: 64px;
+            padding: 0;
+            box-shadow: none;
+            border-radius: 50%;
+            
+            &.red {
+                background: #ee0979;  
+            }
+
+            &.yellow {
+                background: #fffc00; 
+            }
+
+            &.green {
+                background: #45b649;
+            }
+
+            &:disabled {
+                background: #283048; 
+            }
+        }
+    }
+}

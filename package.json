@@ -4,8 +4,9 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "dev:client": "parcel src/client/index.html --out-dir=public",
-    "dev:server": "nodemon src/server/index.js"
+    "dev:client": "rm -rf .cache && parcel src/client/index.html --out-dir=public",
+    "dev:server": "nodemon src/server/index.js",
+    "postinstall": "parcel build src/client/index.html --out-dir=public"
   },
   "dependencies": {
     "express": "^4.17.1",
@@ -16,7 +17,15 @@
     "socket.io-server": "^1.0.0-b"
   },
   "devDependencies": {
+    "babel-core": "^6.26.3",
+    "babel-plugin-transform-react-jsx": "^6.24.1",
+    "babel-plugin-transform-runtime": "^6.23.0",
+    "babel-runtime": "^6.26.0",
     "nodemon": "^2.0.3",
-    "parcel": "^1.12.4"
-  }
+    "parcel": "^1.12.4",
+    "sass": "^1.26.3"
+  },
+  "browserslist": [
+    "last 1 Chrome version"
+  ]
 }
