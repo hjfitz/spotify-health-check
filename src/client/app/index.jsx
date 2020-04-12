@@ -22,7 +22,6 @@ const App = () => {
         route('/set-room')
     }
     const keySetUsername = (ev) => {
-        console.log(ev.key)
         if (ev.key === 'Enter') setUsername()
     }
     // -----------------
@@ -34,11 +33,9 @@ const App = () => {
     const roomEntry = useRef(null)
     //   owner bits
     const createRoom = () => {
-        console.log('oi')
         socket.emit('create-room', name)
         socket.on('room-id', (resp) => {
             setNotFound(false)
-            console.log('Setting room ID: ', {resp})
             setRoom(resp)
             setIsOwner(true)
             route('/game')
@@ -66,13 +63,19 @@ const App = () => {
     const [participants, setParticipants] = useState([]) // list of names
     const [curQuestion, setCurQuestion] = useState(null)
 
+    const [showPrevRound, setShowPrevRound] = useState(true) // for pausing between rounds
+    const [prevResponse, setPrevResponse] = useState([]) // previous round responses to shows
+
     const startGame = () => {
         socket.emit('start-game', room)
+    }
+
+    const goToNextRound = () => {
+        socket.emit('next-round', room)
     }
     
     
     const sendColour = (colour) => () => {
-        console.log(colour)
         socket.emit('response', {room, colour})
         setWaiting(true)
     }
@@ -90,7 +93,6 @@ const App = () => {
         setSocket(newSocket)
 
         newSocket.on('new-user', (data) => {
-            console.log(data)
             setNotFound(false)
             setParticipants(data)
         })
@@ -101,18 +103,25 @@ const App = () => {
 
         newSocket.on('question', (question) => {
             setWaiting(false)
-            console.log(question)
+            setShowPrevRound(false)
             setCurQuestion(question)
         })
 
+        newSocket.on('round-response', (responses) => {
+            setShowPrevRound(true)
+            setPrevResponse(responses)
+        })
+
         newSocket.on('game-start', () => {
-            console.log('flipping not found')
             setIsReady(true)
+        })
+
+        newSocket.on('game-ended', () => {
+            route('/ended-disconnect')
         })
 
         newSocket.on('complete', (responses) => {
             route('/results')
-            console.log({responses})
             setResponses(responses)
         })
     }, [])
@@ -175,6 +184,19 @@ const App = () => {
                                 </div>
                             </div>
                         )}
+
+                        {(showPrevRound && (
+                            <div className="previousresponse">
+                                <h3>Previous Round</h3>
+                                {JSON.stringify(prevResponse)}
+                            </div>
+                        ))}
+
+                        {isOwner && showPrevRound && (
+                            <div className="nextround">
+                                <button onClick={goToNextRound}>Next Round</button>
+                            </div>
+                        )}
                        
                         {(!isOwner) && (
                             <div className="responsePanel">
@@ -204,6 +226,11 @@ const App = () => {
                             </li>
                         )}
                     </ul>
+                </section>
+
+                <section path="ended-disconnect" className="ended-early">
+                    <h1>Game over</h1>
+                    <h2>The host disconnected early</h2>
                 </section>
             </Router>
         </main>

@@ -57,7 +57,7 @@ io.on('connection', (socket) => {
             if (room.owner === socket.id) {
                 console.log('cleaning up', id)
                 // inform other participants
-                room.participants.forEach(user => user.socket.emit('game-over'))
+                room.participants.forEach(user => user.socket.emit('game-ended'))
             }
             // remove that socket from participants and re-emit
             const newParticipants = room.participants.filter(user => user.socket.id !== socket.id)
@@ -84,6 +84,30 @@ io.on('connection', (socket) => {
 
     })
 
+    socket.on('next-round', (room) => {
+        const curRoom = rooms[room]
+
+        if (socket.id !== rooms[room].owner) return
+        // might change to return the responses for each question
+        const isComplete = curRoom.emitQuestion()
+
+        if (!isComplete) return
+    
+        console.log('complete, emitting to all participants')
+        curRoom.participants.forEach(({socket}) => {
+            console.log(curRoom.questions)
+            socket.emit('complete', curRoom.questions.map(question => ({
+                title: question.title,
+                green: question.green,
+                red: question.red,
+                responses: question.responses.reduce((acc, cur) => {
+                    acc[cur] += 1
+                    return acc
+                }, {'red': 0, 'yellow': 0, 'green': 0})
+            })))
+        })
+    })
+
     socket.on('response', ({room, colour}) => {
         console.log('recieved response', {colour, room})
         // in room, add response.
@@ -94,25 +118,12 @@ io.on('connection', (socket) => {
         responses.push(colour)
 
         // if responses.length === participants.lengt (-1), send a new question
+        // host will never answer. harder check required?
         if (responses.length === curRoom.participants.length - 1) {
-            // might change to return the responses for each question
-            const isComplete = curRoom.emitQuestion()
 
-            if (!isComplete) return
-        
-            console.log('complete, emitting to all participants')
-            curRoom.participants.forEach(({socket}) => {
-                console.log(curRoom.questions)
-                socket.emit('complete', curRoom.questions.map(question => ({
-                    title: question.title,
-                    green: question.green,
-                    red: question.red,
-                    responses: question.responses.reduce((acc, cur) => {
-                        acc[cur] += 1
-                        return acc
-                    }, {'red': 0, 'yellow': 0, 'green': 0})
-                })))
-            })
+            // have all responses, display round responses
+            const curQuestion = curRoom.questions[curRoom.questionIndex]
+            curRoom.participants.forEach(({socket}) => socket.emit('round-response', {responses, curQuestion}))
         }
 
 
