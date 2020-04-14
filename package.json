@@ -1,12 +1,13 @@
 {
   "name": "poker-planning",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "src/server/index.js",
   "license": "MIT",
   "scripts": {
     "dev:client": "rm -rf .cache && parcel src/client/index.html --out-dir=public",
     "dev:server": "nodemon src/server/index.js",
-    "postinstall": "parcel build src/client/index.html --out-dir=public"
+    "postinstall": "parcel build src/client/index.html --out-dir=public",
+    "start": "node src/server/index.js"
   },
   "dependencies": {
     "express": "^4.17.1",
